@@ -1,22 +1,34 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
-import { Post } from './pages/Post';
-import { About } from './pages/About';
+import { Login } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
+import { PostList } from './pages/PostList';
+import { PostEditor } from './pages/PostEditor';
+import { PageList } from './pages/PageList';
+import { PageEditor } from './pages/PageEditor';
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="posts/:slug" element={<Post />} />
-            <Route path="about" element={<About />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="posts" element={<PostList />} />
+              <Route path="posts/new" element={<PostEditor />} />
+              <Route path="posts/:id/edit" element={<PostEditor />} />
+              <Route path="pages" element={<PageList />} />
+              <Route path="pages/new" element={<PageEditor />} />
+              <Route path="pages/:id/edit" element={<PageEditor />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
