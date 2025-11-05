@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { SEO } from '../components/SEO';
 
 interface Stats {
@@ -24,23 +24,8 @@ export function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [postsResult, pagesResult, tagsResult] = await Promise.all([
-          supabase.from('posts').select('status', { count: 'exact' }),
-          supabase.from('pages').select('id', { count: 'exact', head: true }),
-          supabase.from('tags').select('id', { count: 'exact', head: true }),
-        ]);
-
-        const posts = (postsResult.data || []) as Array<{ status: string }>;
-        const publishedCount = posts.filter(p => p.status === 'published').length;
-        const draftCount = posts.filter(p => p.status === 'draft').length;
-
-        setStats({
-          totalPosts: postsResult.count || 0,
-          publishedPosts: publishedCount,
-          draftPosts: draftCount,
-          totalPages: pagesResult.count || 0,
-          totalTags: tagsResult.count || 0,
-        });
+        const data = await api.get<Stats>('/stats', true);
+        setStats(data);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {

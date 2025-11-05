@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { generateSlug } from '../utils/slug';
 import { SEO } from '../components/SEO';
@@ -28,20 +28,14 @@ export function PageEditor() {
     if (!id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('pages')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const page: any = await api.get(`/pages/${id}`, true);
 
-      if (error) throw error;
-      if (!data) {
+      if (!page) {
         alert('Page not found');
         navigate('/pages');
         return;
       }
 
-      const page: any = data;
       setTitle(page.title);
       setSlug(page.slug);
       setContent(page.content);
@@ -76,28 +70,15 @@ export function PageEditor() {
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('pages')
-          .update(pageData)
-          .eq('id', id!);
-
-        if (error) throw error;
+        await api.put(`/pages/${id}`, pageData, true);
       } else {
-        const { error } = await supabase
-          .from('pages')
-          .insert([pageData]);
-
-        if (error) throw error;
+        await api.post('/pages', pageData, true);
       }
 
       navigate('/pages');
     } catch (error: any) {
       console.error('Error saving page:', error);
-      if (error.code === '23505') {
-        alert('A page with this slug already exists. Please use a different slug.');
-      } else {
-        alert('Failed to save page: ' + error.message);
-      }
+      alert('Failed to save page: ' + error.message);
     } finally {
       setLoading(false);
     }

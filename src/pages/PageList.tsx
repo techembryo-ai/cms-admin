@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Page } from '../types';
 import { SEO } from '../components/SEO';
 
@@ -14,13 +14,8 @@ export function PageList() {
 
   const fetchPages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('pages')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPages(data || []);
+      const data = await api.get<Page[]>('/pages', true);
+      setPages(data);
     } catch (error) {
       console.error('Error fetching pages:', error);
     } finally {
@@ -32,9 +27,7 @@ export function PageList() {
     if (!confirm('Are you sure you want to delete this page?')) return;
 
     try {
-      const { error } = await supabase.from('pages').delete().eq('id', id);
-
-      if (error) throw error;
+      await api.delete(`/pages/${id}`, true);
       setPages(pages.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error deleting page:', error);

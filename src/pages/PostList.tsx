@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Post } from '../types';
 import { SEO } from '../components/SEO';
 
@@ -15,16 +15,9 @@ export function PostList() {
 
   const fetchPosts = async () => {
     try {
-      let query = supabase.from('posts').select('*').order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setPosts(data || []);
+      const endpoint = filter === 'all' ? '/posts' : `/posts?status=${filter}`;
+      const data = await api.get<Post[]>(endpoint, true);
+      setPosts(data);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
@@ -36,9 +29,7 @@ export function PostList() {
     if (!confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', id);
-
-      if (error) throw error;
+      await api.delete(`/posts/${id}`, true);
       setPosts(posts.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error deleting post:', error);

@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { generateSlug } from '../utils/slug';
 import { SEO } from '../components/SEO';
@@ -30,20 +30,14 @@ export function PostEditor() {
     if (!id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const post: any = await api.get(`/posts/${id}`, true);
 
-      if (error) throw error;
-      if (!data) {
+      if (!post) {
         alert('Post not found');
         navigate('/posts');
         return;
       }
 
-      const post: any = data;
       setTitle(post.title);
       setSlug(post.slug);
       setContent(post.content);
@@ -83,28 +77,15 @@ export function PostEditor() {
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('posts')
-          .update(postData)
-          .eq('id', id!);
-
-        if (error) throw error;
+        await api.put(`/posts/${id}`, postData, true);
       } else {
-        const { error } = await supabase
-          .from('posts')
-          .insert([postData]);
-
-        if (error) throw error;
+        await api.post('/posts', postData, true);
       }
 
       navigate('/posts');
     } catch (error: any) {
       console.error('Error saving post:', error);
-      if (error.code === '23505') {
-        alert('A post with this slug already exists. Please use a different slug.');
-      } else {
-        alert('Failed to save post: ' + error.message);
-      }
+      alert('Failed to save post: ' + error.message);
     } finally {
       setLoading(false);
     }
